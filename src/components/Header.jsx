@@ -6,7 +6,7 @@ const Header = ({ activeCategory, onCategoryChange, loading }) => {
       <div className="container">
         <div className="header-content">
           <h1 className="logo">
-            📰 NewsPortal
+            📰 News4U
             <span className="beta-tag">BETA</span>
           </h1>
           <nav className="nav">

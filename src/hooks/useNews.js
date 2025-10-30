@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FALLBACK_ARTICLES } from '../utils/constants';
 
-const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+const API_KEY = '00b9a376c6a24f96afddfa5c1f430726';
 
 export const useNews = () => {
   const [articles, setArticles] = useState([]);
@@ -16,75 +16,97 @@ export const useNews = () => {
     toDate: ''
   });
   const [useFallback, setUseFallback] = useState(false);
+  const [cache, setCache] = useState({});
 
-  const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(null, args), delay);
-    };
+  const buildApiUrl = (endpoint, params) => {
+    const baseUrl = '/newsapi';
+    const queryString = new URLSearchParams({
+      ...params,
+      apiKey: API_KEY
+    }).toString();
+    
+    return `${baseUrl}/${endpoint}?${queryString}`;
   };
 
   const fetchNews = useCallback(async (page = 1, append = false) => {
-    if (!API_KEY || useFallback) {
+    const cacheKey = `${filters.category}-${filters.searchQuery}-${page}`;
+    const CACHE_DURATION = 5 * 60 * 1000;
+    
+    if (cache[cacheKey] && !append && (Date.now() - cache[cacheKey].timestamp < CACHE_DURATION)) {
+      console.log('📦 Using cached data for:', cacheKey);
+      setArticles(cache[cacheKey].articles);
+      setTotalResults(cache[cacheKey].totalResults);
+      setUseFallback(false);
       setLoading(false);
-      setArticles(FALLBACK_ARTICLES);
-      setTotalResults(FALLBACK_ARTICLES.length);
-      setCurrentPage(page);
       return;
     }
+
+    console.log('🚀 Starting API fetch...', { 
+      category: filters.category, 
+      page,
+      searchQuery: filters.searchQuery,
+      fromCache: !!(cache[cacheKey] && !append)
+    });
 
     setLoading(true);
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        apiKey: API_KEY,
+      const params = {
         pageSize: 12,
         page: page,
-        language: 'en',
-        sortBy: 'publishedAt'
-      });
+        language: 'en'
+      };
 
       if (filters.searchQuery) {
-        params.append('q', filters.searchQuery);
+        params.q = filters.searchQuery;
+        console.log('🔍 Search query:', filters.searchQuery);
       } else {
-        params.append('category', filters.category);
-        params.append('country', 'us'); // Untuk top-headlines
+        params.category = filters.category;
+        params.country = 'us';
+        console.log('📂 Category:', filters.category);
       }
 
       if (filters.fromDate) {
-        params.append('from', filters.fromDate);
+        params.from = filters.fromDate;
       }
 
       if (filters.toDate) {
-        params.append('to', filters.toDate);
+        params.to = filters.toDate;
       }
 
       const endpoint = filters.searchQuery ? 'everything' : 'top-headlines';
-      const url = `https://newsapi.org/v2/${endpoint}?${params}`;
+      const url = buildApiUrl(endpoint, params);
 
-      console.log('Fetching from:', url); // Untuk debugging
+      console.log('🌐 Fetching from proxy:', url);
 
       const response = await fetch(url);
+      console.log('📡 Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+        console.error('❌ Proxy Error:', response.status, errorText);
+        throw new Error(`Request failed: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('📊 API Response received');
 
       if (data.status === 'error') {
-        if (data.message.includes('rate limited') || data.code === 'rateLimited') {
-          setUseFallback(true);
-          setArticles(FALLBACK_ARTICLES);
-          setTotalResults(FALLBACK_ARTICLES.length);
-          return;
+        console.error('❌ NewsAPI Error:', data.message);
+        
+        if (data.code === 'corsNotAllowed') {
+          throw new Error('CORS not allowed - using proxy should fix this');
         }
-        throw new Error(data.message || 'Unknown API error');
+        if (data.message.includes('rate limited')) {
+          throw new Error('API rate limit exceeded');
+        }
+        
+        throw new Error(data.message || 'API error');
       }
 
+      console.log('✅ API SUCCESS! Articles:', data.articles?.length);
+      
       if (append) {
         setArticles(prev => {
           const newArticles = [...prev, ...(data.articles || [])];
@@ -97,11 +119,26 @@ export const useNews = () => {
         setTotalResults(data.totalResults || 0);
       }
       setCurrentPage(page);
+      setUseFallback(false);
+      
+      if (!append && data.articles && data.articles.length > 0) {
+        console.log('💾 Saving to cache:', cacheKey);
+        setCache(prev => ({
+          ...prev,
+          [cacheKey]: {
+            articles: data.articles,
+            totalResults: data.totalResults,
+            timestamp: Date.now()
+          }
+        }));
+      }
+      
     } catch (err) {
-      console.error('Error fetching news:', err);
+      console.error('💥 Fetch error:', err.message);
       setError(err.message);
       
       if (!append) {
+        console.log('🔄 Falling back to demo data');
         setUseFallback(true);
         setArticles(FALLBACK_ARTICLES);
         setTotalResults(FALLBACK_ARTICLES.length);
@@ -109,9 +146,17 @@ export const useNews = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, useFallback]);
+  }, [filters, cache]);
 
-  const debouncedFetchNews = useCallback(debounce(fetchNews, 500), [fetchNews]);
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  };
+
+  const debouncedFetchNews = useCallback(debounce(fetchNews, 600), [fetchNews]);
 
   const updateFilters = (newFilters) => {
     setFilters(newFilters);
@@ -125,11 +170,18 @@ export const useNews = () => {
     }
   };
 
-  const retryFetch = () => {
+  const retryWithAPI = () => {
     setUseFallback(false);
     setError(null);
     fetchNews(1, false);
   };
+
+  const clearCache = () => {
+    setCache({});
+    console.log('🗑️ Cache cleared');
+  };
+
+  const hasMore = articles.length < totalResults;
 
   useEffect(() => {
     if (filters.searchQuery) {
@@ -147,9 +199,11 @@ export const useNews = () => {
     currentPage,
     totalResults,
     useFallback,
+    cache,
     updateFilters,
     loadMore,
-    retryFetch,
-    fetchNews
+    hasMore,
+    retryWithAPI,
+    clearCache
   };
 };

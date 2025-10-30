@@ -401,18 +401,22 @@ body {
   right: 0;
   bottom: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: #f8f9fa;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .image-spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid var(--primary-color);
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid #1a73e8;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
 }
 
 .card-image img {
@@ -764,5 +768,108 @@ body {
 
   .image-placeholder {
     background: #3d3d3d;
+  }
+}
+
+.demo-notice {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.demo-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.error-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-message h2 {
+  color: #d32f2f;
+  margin-bottom: 1rem;
+}
+
+.error-help {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 1rem 0;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #1557b0;
+  transform: translateY(-1px);
+}
+
+/* End Message */
+.end-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+}
+
+.end-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.end-message small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #888;
+}
+
+.skeleton-loader {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

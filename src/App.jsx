@@ -15,14 +15,15 @@ function App() {
     useFallback,
     updateFilters,
     loadMore,
-    retryFetch
+    hasMore,
+    retryWithAPI
   } = useNews();
 
   const handleCategoryChange = (category) => {
     updateFilters({
       ...filters,
       category,
-      searchQuery: '' 
+      searchQuery: '' // Clear search when switching categories
     });
   };
 
@@ -30,7 +31,7 @@ function App() {
     updateFilters({
       ...filters,
       searchQuery,
-      category: searchQuery ? '' : 'technology' 
+      category: searchQuery ? '' : 'technology' // Clear category when searching
     });
   };
 
@@ -41,8 +42,6 @@ function App() {
       toDate
     });
   };
-
-  const hasMore = articles.length < totalResults && !useFallback;
 
   return (
     <div className="app">
@@ -72,9 +71,7 @@ function App() {
               📊 Found {totalResults.toLocaleString()} articles
               {filters.searchQuery && ` for "${filters.searchQuery}"`}
               {filters.category && !filters.searchQuery && ` in ${filters.category}`}
-              {filters.fromDate && filters.toDate && 
-                ` from ${new Date(filters.fromDate).toLocaleDateString()} to ${new Date(filters.toDate).toLocaleDateString()}`
-              }
+              {useFallback && ' (Demo Mode)'}
             </p>
           )}
         </div>
@@ -86,15 +83,15 @@ function App() {
           onLoadMore={loadMore}
           hasMore={hasMore}
           useFallback={useFallback}
-          onRetry={retryFetch}
+          onRetryWithAPI={retryWithAPI}
         />
       </main>
 
       <footer className="app-footer">
         <div className="container">
           <p>
-            Powered by NewsAPI • 
-            {useFallback ? ' Using demo data' : ' Live news data'} • 
+            News4U - Your Daily News Portal • 
+            {useFallback ? ' Using demo data' : ' Live news from NewsAPI'} • 
             Built with React & Vite
           </p>
         </div>
