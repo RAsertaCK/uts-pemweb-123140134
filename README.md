@@ -117,4 +117,3 @@ news4u-portal/
 ## 🎨 Atribusi
 
 - Ikon Favicon: [Newspaper icons created by smalllikeart - Flaticon](https://www.flaticon.com/free-icons/newspaper)
-````
