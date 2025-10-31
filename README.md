@@ -22,9 +22,7 @@ Aplikasi ini telah di-deploy menggunakan Vercel.
 
 | Tampilan Desktop | Tampilan Mobile (Responsif) |
 | :---: | :---: |
-| ![Tampilan Desktop News4U]([GANTI DENGAN PATH SCREENSHOT DESKTOP ANDA]) | ![Tampilan Mobile News4U]([GANTI DENGAN PATH SCREENSHOT MOBILE ANDA]) |
-
-*(Catatan: Ganti path screenshot di atas dengan path ke screenshot Anda yang sebenarnya, misalnya `public/screenshot-desktop.png`)*
+| ![Tampilan Desktop News4U]([`public/Desktop.png`]) | ![Tampilan Mobile News4U]([`public/Mobile.png`]) |
 
 ## 📚 Deskripsi Proyek
 
