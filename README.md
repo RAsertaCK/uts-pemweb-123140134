@@ -14,7 +14,7 @@ Repositori ini dibuat untuk memenuhi Ujian Tengah Semester (UTS) mata kuliah Pem
 
 Aplikasi ini telah di-deploy menggunakan Vercel.
 
-![Live Demo](https://uts-pemweb-123140134.vercel.app/)
+[Live Demo](https://uts-pemweb-123140134.vercel.app/)
 
 ---
 
