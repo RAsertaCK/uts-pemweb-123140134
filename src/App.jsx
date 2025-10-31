@@ -96,6 +96,12 @@ function App() {
             {useFallback ? ' Using demo data' : ' Live news from NewsAPI'} • 
             Built with React & Vite
           </p>
+
+          <p className="attribution">
+            <a href="https://www.flaticon.com/free-icons/newspaper" title="newspaper icons">
+              Newspaper icons created by smalllikeart - Flaticon
+            </a>
+          </p>
         </div>
       </footer>
     </div>

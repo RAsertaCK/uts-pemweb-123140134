@@ -224,7 +224,7 @@ body {
 
 .clear-button {
   position: absolute;
-  right: 140px; 
+  right: 130px; 
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -725,6 +725,21 @@ body {
   line-height: 1.5;
 }
 
+.app-footer .attribution {
+  font-size: 0.8rem;
+  color: var(--text-lighter);
+  margin-top: 0.5rem;
+}
+
+.app-footer .attribution a {
+  color: var(--text-light);
+  text-decoration: none;
+}
+
+.app-footer .attribution a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   html {
     font-size: 15px;
@@ -1056,6 +1071,10 @@ body {
   .search-input:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+  }
+  
+  .app-footer .attribution a {
+    color: var(--text-lighter);
   }
 }
 

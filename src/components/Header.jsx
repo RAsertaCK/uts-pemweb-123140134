@@ -5,10 +5,15 @@ const Header = ({ activeCategory, onCategoryChange, loading }) => {
     <header className="header">
       <div className="container">
         <div className="header-content">
-          <h1 className="logo">
-            📰 News4U
+          <a href="/" className="logo">
+            <img 
+              src="/Newspaper-Free-Download-PNG.png" 
+              alt="News4U Logo" 
+              style={{ height: '32px', width: '32px', objectFit: 'contain' }} 
+            />
+            News4U
             <span className="beta-tag">BETA</span>
-          </h1>
+          </a>
           <nav className="nav">
             {CATEGORIES.map(category => (
               <button
