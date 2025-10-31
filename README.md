@@ -92,8 +92,8 @@ news4u-portal/
 
 1.  **Clone repository ini:**
     ```bash
-    git clone [https://github.com/](https://github.com/)[USERNAME_ANDA]/[NAMA_REPO_ANDA].git
-    cd [NAMA_REPO_ANDA]
+    git clone https://github.com/RAsertaCK/uts-pemweb-123140134.git
+    cd news-portal
     ```
 
 2.  **Install dependencies:**
