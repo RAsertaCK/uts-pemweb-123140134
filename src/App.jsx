@@ -16,14 +16,15 @@ function App() {
     updateFilters,
     loadMore,
     hasMore,
-    retryWithAPI
+    retryWithAPI,
+    currentPage
   } = useNews();
 
   const handleCategoryChange = (category) => {
     updateFilters({
       ...filters,
       category,
-      searchQuery: '' // Clear search when switching categories
+      searchQuery: ''
     });
   };
 
@@ -31,7 +32,7 @@ function App() {
     updateFilters({
       ...filters,
       searchQuery,
-      category: searchQuery ? '' : 'technology' // Clear category when searching
+      category: searchQuery ? '' : 'technology'
     });
   };
 
@@ -84,6 +85,7 @@ function App() {
           hasMore={hasMore}
           useFallback={useFallback}
           onRetryWithAPI={retryWithAPI}
+          currentPage={currentPage}
         />
       </main>
 

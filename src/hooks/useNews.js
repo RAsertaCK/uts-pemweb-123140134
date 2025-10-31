@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FALLBACK_ARTICLES } from '../utils/constants';
+import { getLocalNewsByCategory, getLocalNewsBySearch } from '../utils/newsData';
 
-const API_KEY = '00b9a376c6a24f96afddfa5c1f430726';
+const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
 
 export const useNews = () => {
   const [articles, setArticles] = useState([]);
@@ -19,6 +19,11 @@ export const useNews = () => {
   const [cache, setCache] = useState({});
 
   const buildApiUrl = (endpoint, params) => {
+    if (!API_KEY) {
+      console.error("VITE_NEWS_API_KEY tidak ditemukan! Memaksa mode demo.");
+      return 'http://invalid-api-key.test';
+    }
+    
     const baseUrl = '/newsapi';
     const queryString = new URLSearchParams({
       ...params,
@@ -29,8 +34,8 @@ export const useNews = () => {
   };
 
   const fetchNews = useCallback(async (page = 1, append = false) => {
-    const cacheKey = `${filters.category}-${filters.searchQuery}-${page}`;
-    const CACHE_DURATION = 5 * 60 * 1000;
+    const cacheKey = `${filters.category}-${filters.searchQuery}-${filters.fromDate}-${filters.toDate}-${page}`;
+    const CACHE_DURATION = 5 * 60 * 1000; 
     
     if (cache[cacheKey] && !append && (Date.now() - cache[cacheKey].timestamp < CACHE_DURATION)) {
       console.log('📦 Using cached data for:', cacheKey);
@@ -41,12 +46,7 @@ export const useNews = () => {
       return;
     }
 
-    console.log('🚀 Starting API fetch...', { 
-      category: filters.category, 
-      page,
-      searchQuery: filters.searchQuery,
-      fromCache: !!(cache[cacheKey] && !append)
-    });
+    console.log('🚀 Starting API fetch...', { filters, page });
 
     setLoading(true);
     setError(null);
@@ -58,35 +58,42 @@ export const useNews = () => {
         language: 'en'
       };
 
+      let endpoint;
+      const hasDateFilter = filters.fromDate && filters.toDate;
+
       if (filters.searchQuery) {
+        endpoint = 'everything';
         params.q = filters.searchQuery;
-        console.log('🔍 Search query:', filters.searchQuery);
+        
+      } else if (hasDateFilter) {
+        endpoint = 'everything';
+        params.q = filters.category; 
+        
       } else {
+        endpoint = 'top-headlines';
         params.category = filters.category;
         params.country = 'us';
-        console.log('📂 Category:', filters.category);
+      }
+      
+      if (endpoint === 'everything') {
+        if (filters.fromDate) params.from = filters.fromDate;
+        if (filters.toDate) params.to = filters.toDate;
+        
+        if (!params.q) {
+           params.sortBy = 'popularity'; 
+        }
       }
 
-      if (filters.fromDate) {
-        params.from = filters.fromDate;
-      }
-
-      if (filters.toDate) {
-        params.to = filters.toDate;
-      }
-
-      const endpoint = filters.searchQuery ? 'everything' : 'top-headlines';
       const url = buildApiUrl(endpoint, params);
-
       console.log('🌐 Fetching from proxy:', url);
 
       const response = await fetch(url);
       console.log('📡 Response status:', response.status);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Proxy Error:', response.status, errorText);
-        throw new Error(`Request failed: ${response.status}`);
+        const errorData = await response.json(); 
+        console.error('❌ Proxy Error:', response.status, errorData);
+        throw new Error(errorData.message || `Request failed: ${response.status}`);
       }
 
       const data = await response.json();
@@ -94,14 +101,6 @@ export const useNews = () => {
 
       if (data.status === 'error') {
         console.error('❌ NewsAPI Error:', data.message);
-        
-        if (data.code === 'corsNotAllowed') {
-          throw new Error('CORS not allowed - using proxy should fix this');
-        }
-        if (data.message.includes('rate limited')) {
-          throw new Error('API rate limit exceeded');
-        }
-        
         throw new Error(data.message || 'API error');
       }
 
@@ -138,16 +137,33 @@ export const useNews = () => {
       setError(err.message);
       
       if (!append) {
-        console.log('🔄 Falling back to demo data');
+        console.log('🔄 Falling back to rich demo data');
         setUseFallback(true);
-        setArticles(FALLBACK_ARTICLES);
-        setTotalResults(FALLBACK_ARTICLES.length);
+        let demoData;
+        
+        if (filters.searchQuery) {
+          demoData = getLocalNewsBySearch(filters.searchQuery);
+        } else {
+          demoData = getLocalNewsByCategory(filters.category);
+        }
+        
+        if (filters.fromDate && filters.toDate) {
+            const from = new Date(filters.fromDate);
+            const to = new Date(filters.toDate);
+            demoData = demoData.filter(article => {
+                const articleDate = new Date(article.publishedAt);
+                return articleDate >= from && articleDate <= to;
+            });
+        }
+        
+        setArticles(demoData);
+        setTotalResults(demoData.length);
       }
     } finally {
       setLoading(false);
     }
   }, [filters, cache]);
-
+  
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -165,7 +181,8 @@ export const useNews = () => {
   };
 
   const loadMore = () => {
-    if (!loading && articles.length < totalResults && !useFallback) {
+    const hardLimitReached = articles.length >= 100;
+    if (!loading && articles.length < totalResults && !useFallback && !hardLimitReached) {
       fetchNews(currentPage + 1, true);
     }
   };
@@ -173,6 +190,7 @@ export const useNews = () => {
   const retryWithAPI = () => {
     setUseFallback(false);
     setError(null);
+    setCache({}); 
     fetchNews(1, false);
   };
 
@@ -181,7 +199,8 @@ export const useNews = () => {
     console.log('🗑️ Cache cleared');
   };
 
-  const hasMore = articles.length < totalResults;
+  const hardLimitReached = articles.length >= 100;
+  const hasMore = articles.length < totalResults && !useFallback && !hardLimitReached;
 
   useEffect(() => {
     if (filters.searchQuery) {
@@ -196,7 +215,7 @@ export const useNews = () => {
     loading,
     error,
     filters,
-    currentPage,
+    currentPage, 
     totalResults,
     useFallback,
     cache,

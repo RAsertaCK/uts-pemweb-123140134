@@ -8,7 +8,8 @@ const NewsGrid = ({
   onLoadMore, 
   hasMore, 
   useFallback,
-  onRetryWithAPI
+  onRetryWithAPI,
+  currentPage
 }) => {
   const observerRef = useRef();
   const lastArticleRef = useRef();
@@ -43,7 +44,7 @@ const NewsGrid = ({
         <h2>API Connection Issue</h2>
         <p>{error}</p>
         <p className="error-help">
-          This might be due to CORS restrictions or API rate limits.
+          Ini mungkin karena batas 100 artikel NewsAPI tercapai atau masalah jaringan.
         </p>
         <div className="error-actions">
           <button onClick={onRetryWithAPI} className="retry-button">
@@ -59,7 +60,7 @@ const NewsGrid = ({
       <div className="no-articles">
         <div className="no-articles-icon">📰</div>
         <h2>No articles found</h2>
-        <p>Try changing your search criteria or category.</p>
+        <p>Try changing your search criteria or date range.</p>
       </div>
     );
   }
@@ -69,14 +70,14 @@ const NewsGrid = ({
       {useFallback && (
         <div className="demo-notice">
           <span className="demo-badge">DEMO</span>
-          Showing demo data - API might be restricted
+          Showing demo data - API might be restricted or key missing
         </div>
       )}
       
       <div className="news-grid">
         {articles.map((article, index) => (
           <div
-            key={`${article.url}-${index}-${article.publishedAt}`}
+            key={article.url || `${article.title}-${article.publishedAt}`}
             ref={index === articles.length - 1 ? lastArticleRef : null}
           >
             <NewsCard article={article} index={index} />
@@ -88,7 +89,8 @@ const NewsGrid = ({
         <div className="loading-spinner">
           <div className="spinner"></div>
           <p>
-            {useFallback ? 'Loading demo articles...' : 'Fetching latest news...'}
+            {currentPage > 1 ? 'Loading more articles...' : 
+              (useFallback ? 'Loading demo articles...' : 'Fetching latest news...')}
           </p>
         </div>
       )}
