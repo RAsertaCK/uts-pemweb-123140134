@@ -83,6 +83,7 @@ news4u-portal/
 ├── index.html
 ├── package.json
 └── vite.config.js
+└── vercel.json
 
 ````
 
